@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microfinance Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+    #chat-container {
+      width: 300px;
+      max-width: 100%;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    .message {
+      margin: 10px 0;
+    }
+    .user-message {
+      text-align: right;
+      color: blue;
+    }
+    .bot-message {
+      text-align: left;
+      color: green;
+    }
+    #input-container {
+      display: flex;
+    }
+    #user-input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #send-button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #send-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h3>Microfinance Chatbot</h3>
+    <div id="messages"></div>
+    <div id="input-container">
+      <input type="text" id="user-input" placeholder="Ask a question..." />
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesContainer = document.getElementById('messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    // Add event listener to send button
+    sendButton.addEventListener('click', sendMessage);
+
+    // Function to send message to the backend
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (message === '') return;
+
+      // Display the user's message
+      appendMessage(message, 'user');
+
+      // Send the message to the backend
+      try {
+        const response = await fetch('http://localhost:3000/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        if (data.reply) {
+          // Display the bot's response
+          appendMessage(data.reply, 'bot');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        appendMessage("Sorry, something went wrong. Please try again later.", 'bot');
+      }
+
+      // Clear the input field
+      userInput.value = '';
+    }
+
+    // Function to append messages to the chat container
+    function appendMessage(message, sender) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+      messageDiv.textContent = message;
+      messagesContainer.appendChild(messageDiv);
+
+      // Scroll to the bottom of the chat
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
