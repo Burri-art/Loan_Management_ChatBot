@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const openai = require('openai');  // Import OpenAI SDK v2 or below
 require('dotenv').config();
-const { createTables, addUser, getUserByEmail, applyForLoan, getLoansByUserId } = require('./database');
+const { createTables, applyForLoan, getLoansByUserId } = require('./database');
 
 const app = express();
 app.use(bodyParser.json());
@@ -14,43 +14,17 @@ openai.apiKey = process.env.OPENAI_API_KEY; // Use your OpenAI API key stored in
 // Create tables if they don't exist
 createTables();
 
-// Register a new user
-app.post('/register', (req, res) => {
-  const { name, email } = req.body;
-
-  // Validate input
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required.' });
-  }
-
-  getUserByEmail(email, (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error checking for existing user.' });
-    }
-    if (user) {
-      return res.status(400).json({ error: 'User with this email already exists.' });
-    }
-
-    addUser(name, email, (err, userId) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error registering user.' });
-      }
-      res.json({
-        message: 'User registered successfully!',
-        userId,
-      });
-    });
-  });
-});
-
 // Apply for a loan
 app.post('/apply-loan', (req, res) => {
-  const { userId, amount } = req.body;
+  const { amount } = req.body;
 
   // Validate input
-  if (!userId || !amount) {
-    return res.status(400).json({ error: 'User ID and amount are required.' });
+  if (!amount) {
+    return res.status(400).json({ error: 'Loan amount is required.' });
   }
+
+  // Simplified: Using a default user ID (e.g., 1)
+  const userId = 1;
 
   applyForLoan(userId, amount, (err, loanId) => {
     if (err) {
@@ -64,15 +38,16 @@ app.post('/apply-loan', (req, res) => {
 });
 
 // Check loan status
-app.get('/loan-status/:userId', (req, res) => {
-  const userId = req.params.userId;
+app.get('/loan-status', (req, res) => {
+  // Simplified: Using a default user ID (e.g., 1)
+  const userId = 1;
 
   getLoansByUserId(userId, (err, loans) => {
     if (err) {
       return res.status(500).json({ error: 'Error fetching loan data.' });
     }
     if (loans.length === 0) {
-      return res.status(404).json({ message: 'No loan found for this user.' });
+      return res.status(404).json({ message: 'No loan found.' });
     }
     res.json({
       loans: loans.map((loan) => ({
